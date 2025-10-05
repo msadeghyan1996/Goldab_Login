@@ -13,15 +13,20 @@ This project includes a Dockerized environment to simplify setup and ensure cons
    ```bash
    cd Login 
    ```
+ 
 2. Build and start containers
-  ```bash
-    docker compose up -d --build
-  ```
+   ```bash
+   Before make .env file from .env.example
+   docker compose up -d --build 
+   ```
 3. Access the application
-
-- Web Application: http://localhost:8008
-- phpMyAdmin: http://localhost:7272
-> phpMyAdmin credentials:
-> - Host: `db`
-> - Username: `root`
-> - Password: `root`
+   - Web Application: http://localhost:8008
+   - phpMyAdmin: http://localhost:7272
+   > phpMyAdmin credentials:
+   > - Host: `db`
+   >   - Username: `root`
+   >   - Password: `root`
+4. Run php comment:
+   ```bash
+   docker exec -it javadApp bash
+   $ php artisan php artisan key:generate

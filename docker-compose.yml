@@ -1,48 +1,49 @@
 name: javad
 services:
-    app:
-        container_name: javadApp
-        build: ./docker
-        ports:
-            - "8008:80"
-        volumes:
-            # Mount source-code for development
-            - ./:/var/www/html
-        networks:
-            - javad-net
-        depends_on:
-            -   db
-            - phpmyadmin
-    db:
-        image: mysql:8.2
-        container_name: javadMySql
-        command: --default-authentication-plugin=mysql_native_password
-        restart: always
-        ports:
-            - "3308:3306"
-        volumes:
-            - ./storage/mysql:/var/lib/mysql
-            - ./mysql-config.cnf:/etc/mysql/conf.d/config.cnf
-        environment:
-            MYSQL_ROOT_PASSWORD: root
-        networks:
-            - javad-net
-    phpmyadmin:
-        container_name: javadAdmin
-        image: phpmyadmin:latest
-        restart: always
-        depends_on:
-            - db
-        links:
-            - db
-        ports:
-            - "7272:80"
-        environment:
-            PMA_ARBITRARY: 1
-            UPLOAD_LIMIT: 3000M
-        networks:
-            - javad-net
+  app:
+    container_name: javadApp
+    build: ./docker
+    ports:
+      - "8008:80"
+    volumes:
+      # Mount source-code for development
+      - ./:/var/www/html
+    networks:
+      - javad-net
+    depends_on:
+      - db
+      - phpmyadmin
+  db:
+    image: mysql:8.2
+    container_name: javadMySql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - "${DB_PORT}:3306"
+    volumes:
+      - ./storage/mysql:/var/lib/mysql
+      - ./docker/mysql-config.cnf:/etc/mysql/conf.d/config.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${DB_DATABASE}
+    networks:
+      - javad-net
+  phpmyadmin:
+    container_name: javadAdmin
+    image: phpmyadmin:latest
+    restart: always
+    depends_on:
+      - db
+    links:
+      - db
+    ports:
+      - "7272:80"
+    environment:
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 3000M
+    networks:
+      - javad-net
 networks:
-    javad-net:
-        external: false
+  javad-net:
+    external: false
 
