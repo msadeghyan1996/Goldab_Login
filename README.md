@@ -29,4 +29,22 @@ This project includes a Dockerized environment to simplify setup and ensure cons
 4. Run php comment:
    ```bash
    docker exec -it javadApp bash
+   $ composer install
    $ php artisan php artisan key:generate
+   $ php artisan php artisan migrate
+   $ php artisan php artisan test 
+   ```
+
+### ✅ Implemented Features
+- Laravel 12 project initialized with Docker
+- Users table with `name`, `last_name`, `mobile`, `password`, `status`, ...
+- OTP table and model for login verification
+- Mobile normalization and validation
+- Login API with OTP generation and registration flow
+- Standardized JSON response (`success`, `statusType`, `message`, `errors`, `data`, `notify`)
+- Feature tests with PHPUnit
+- 
+### 📝 Notes
+- `.env` file must exist before starting containers
+- OTP codes expire in 3 minutes
+- Tests require a fresh database
