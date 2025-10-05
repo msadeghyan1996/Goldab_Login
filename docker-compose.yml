@@ -51,11 +51,10 @@ services:
   supervisor:
     build:
       context: ./landing
-      dockerfile: supervisor.prod.dockerfile
+      dockerfile: .docker/supervisor.dockerfile
     container_name: ${PROJECT_BASE_NAME}-supervisor
     volumes:
-      - ./landing/storage:/var/www/api/storage
-      - ./landing/.docker/supervisord/supervisor.conf:/etc/supervisor/supervisord.conf
+      - ./landing:/app
     depends_on:
       - redis
     networks:

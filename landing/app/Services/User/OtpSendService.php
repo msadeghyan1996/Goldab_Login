@@ -2,12 +2,14 @@
 
 namespace App\Services\User;
 
+use App\Jobs\SendOtpJob;
 use App\Models\User\User;
 use Illuminate\Support\Facades\RateLimiter;
 
 class OtpSendService
 {
     private string $cacheKey;
+    private string $code;
 
     public function __construct(private string $phoneNumber, private string $ipAddress, private int $invalidateSeconds = 120, private int $resendSeconds = 60)
     {
@@ -21,6 +23,7 @@ class OtpSendService
             return $rateReached;
         }
         $this->generateOtpForPhoneNumber();
+        $this->sendSms();
         return null;
     }
 
@@ -44,7 +47,12 @@ class OtpSendService
     private function generateOtpForPhoneNumber(): void
     {
         cache()->forget($this->cacheKey);
-        $code = app()->isProduction() ? random_int(100000, 999999) : 111111;
-        cache()->put($this->cacheKey, $code, now()->addSeconds($this->invalidateSeconds));
+        $this->code = app()->isProduction() ? random_int(100000, 999999) : 111111;
+        cache()->put($this->cacheKey, $this->code, now()->addSeconds($this->invalidateSeconds));
+    }
+
+    private function sendSms(): void
+    {
+        dispatch(new SendOtpJob($this->phoneNumber, $this->code));
     }
 }
