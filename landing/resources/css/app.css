@@ -1,11 +1,117 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+@plugin "daisyui";
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Custom color palette variables */
+:root {
+    --primary: #10b981;
+    --primary-focus: #059669;
+    --primary-content: #ffffff;
+    --secondary: #6366f1;
+    --secondary-focus: #4f46e5;
+    --secondary-content: #ffffff;
+    --accent: #f59e0b;
+    --accent-focus: #d97706;
+    --accent-content: #ffffff;
+    --neutral: #374151;
+    --neutral-focus: #1f2937;
+    --neutral-content: #ffffff;
+    --base-100: #ffffff;
+    --base-200: #f3f4f6;
+    --base-300: #e5e7eb;
+    --base-content: #1f2937;
+    --info: #3b82f6;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --error: #ef4444;
+}
+
+/* Custom animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.fade-in-up-delay {
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+/* Gradient overlay for image */
+.image-overlay {
+    background: linear-gradient(
+        135deg,
+        rgba(16, 185, 129, 0.05),
+        rgba(99, 102, 241, 0.05)
+    );
+}
+
+
+/* OTP Input Styling */
+.otp-input {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.otp-input:focus {
+    border-color: #10b981;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.otp-input.filled {
+    border-color: #10b981;
+    background-color: rgba(16, 185, 129, 0.05);
+}
+
+.otp-input.error {
+    border-color: #ef4444;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Alert toast positioning */
+.alert-toast {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 50;
+    max-width: 24rem;
 }
