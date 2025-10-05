@@ -5,7 +5,7 @@ services:
       context: ./landing
       dockerfile: .docker/php.dockerfile
     volumes:
-      - ./landing:/app:cached
+      - ./landing/storage/app:/app/storage/app:cached
     depends_on:
       - mysql
       - redis
