@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\OTP\Type;
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
+use App\Models\OTP;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -101,7 +102,10 @@ class AuthController extends Controller {
 
         } elseif ( !$user->last_name ) {
             // if not verify mobile
-            if ( !$user->mobile_verified_at ) {
+            if ( !$user->hasVerifiedMobile() ) {
+                /**
+                 * @var OTP $otp
+                 */
                 $otp = $user->otp;
                 if ( !$otp ) {
                     $otp = $user->otp()->create([
@@ -121,7 +125,7 @@ class AuthController extends Controller {
                     return self::error('لطفا دوباره تلاش فرمایید');
                 }
 
-                if ( !$otp->isExpired() ) {
+                if ( !$otp->isExpired(Type::Login) ) {
                     $secondsLeft = now()->diffInSeconds($otp->expires_at);
 
                     return self::warning([
@@ -163,6 +167,72 @@ class AuthController extends Controller {
                 'page'  => 'home'
             ]
         ]);
+
+    }
+
+    public function otpVerify (Request $request) {
+
+        $validator = Validator::make($request->all(), [
+            'mobile' => 'required|max:15',
+            'code'   => 'required|digits:4'
+        ]);
+
+        if ( $validator->fails() ) {
+            return self::validationResponse($validator);
+        }
+        $data   = $validator->validated();
+        $mobile = $data['mobile'];
+        $code   = $data['code'];
+        $mobile = Helper::normalizeMobile($mobile);
+        if ( !$mobile ) {
+            return self::warning([
+                'message' => 'فیلدها را به صورت صحیح وارد فرمایید',
+                'errors'  => [
+                    'mobile' => 'شماره همراه معتبر نیست'
+                ]
+            ], 422);
+        }
+        /**
+         * @var User $user
+         */
+        $user = User::whereMobile($mobile)->first();
+        if ( !$user ) {
+            return self::warning('شماره تلفن صحیح نمی باشد', 404);
+        }
+        /** @var OTP|null $otp */
+        $otp = $user->otp;
+        if ( !$otp || $otp->isExpired(Type::Login) || !$otp->isValid($code) ) {
+            return self::warning('کد منقضی شده است');
+        }
+
+        if ( !$user->hasVerifiedMobile() ) {
+            $user->forceFill([
+                'mobile_verified_at' => now(),
+            ])->save();
+        }
+        // expire code
+        $otp->setExpire();
+        $otp->save();
+
+        if ( blank($user->last_name) ) {
+            return self::success([
+                'message' => 'لطفا اطلاعات خود را کامل فرمایید',
+                'data'    => [
+                    'page' => 'register'
+                ],
+            ]);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return self::success([
+            'message' => 'با موفقیت وارد شدید',
+            'data'    => [
+                'token' => $token,
+                'page'  => 'home',
+            ],
+        ]);
+
 
     }
 

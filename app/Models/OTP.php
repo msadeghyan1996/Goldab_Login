@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Enums\OTP\Type;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class OTP extends Model {
+    use HasFactory;
 
     protected $table        = 'otps';
     public    $incrementing = false;
@@ -49,9 +52,14 @@ class OTP extends Model {
 
     /**
      * check if expired time
+     *
      * @return bool
      */
-    public function isExpired () : bool {
-        return $this->expires_at->isPast();
+    public function isExpired (Type $type) : bool {
+        return $this->expires_at->isPast() || $this->type !== $type;
+    }
+
+    public function setExpire () {
+        $this->expires_at = Carbon::now()->subMinutes(20);
     }
 }

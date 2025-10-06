@@ -3,6 +3,7 @@ services:
   app:
     container_name: javadApp
     build: ./docker
+    #user: "1000:1000"
     ports:
       - "8008:80"
     volumes:
@@ -19,7 +20,7 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     ports:
-      - "${DB_PORT}:3306"
+      - "3308:3306"
     volumes:
       - ./storage/mysql:/var/lib/mysql
       - ./docker/mysql-config.cnf:/etc/mysql/conf.d/config.cnf
