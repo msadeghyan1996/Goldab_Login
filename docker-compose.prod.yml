@@ -3,9 +3,9 @@ services:
     container_name: ${PROJECT_BASE_NAME}
     build:
       context: ./landing
-      dockerfile: .docker/php.dockerfile
+      dockerfile: .docker/php.prod.dockerfile
     volumes:
-      - ./landing/storage/app:/app/storage/app:cached
+      - ./landing/storage:/app/storage
     depends_on:
       - mysql
       - redis
@@ -51,11 +51,10 @@ services:
   supervisor:
     build:
       context: ./landing
-      dockerfile: supervisor.prod.dockerfile
+      dockerfile: .docker/supervisor.prod.dockerfile
     container_name: ${PROJECT_BASE_NAME}-supervisor
     volumes:
-      - ./landing/storage:/var/www/api/storage
-      - ./landing/.docker/supervisord/supervisor.conf:/etc/supervisor/supervisord.conf
+      - ./landing:/app
     depends_on:
       - redis
     networks:
