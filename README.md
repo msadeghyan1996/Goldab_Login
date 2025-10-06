@@ -47,6 +47,22 @@ php artisan migrate
 # exit when done
 ```
 
+## 5) Now Enjoy Logging In!
+
+Open your favorite browser, and open this link (You may have changed some ports. Assuming you haven't):
+
+```
+http://127.0.0.1:9010/auth
+```
+
+You can also open PHPMyAdmin here:
+
+```
+http://127.0.0.1:9015
+```
+
+Default credentials to login to PMA is "goldab_admin" and "secret"
+
 ## Notes
 
 - You can change **ports** and **names** from the root `.env`. If you change these, rebuild/restart as needed:
