@@ -3,6 +3,8 @@
 namespace App\Models;
 
 
+use App\Enums\User\Status;
+use Hekmatinasser\Verta\Verta;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -48,9 +50,11 @@ class User extends Authenticatable {
         return [
             'mobile_verified_at' => 'datetime',
             'password'           => 'hashed',
+            'status'             => Status::class,
         ];
     }
 
+    protected $appends = ['created_at_verta', 'updated_at_verta', 'mobile_verified_at_verta'];
 
     //======================================================== Relation Part ========================================
 
@@ -64,4 +68,16 @@ class User extends Authenticatable {
         return !is_null($this->mobile_verified_at);
     }
 
+
+    public function getCreatedAtVertaAttribute () : ?string {
+        return $this->created_at ? Verta::instance($this->created_at)->format('Y-m-d H:i:s') : null;
+    }
+
+    public function getUpdatedAtVertaAttribute () : ?string {
+        return $this->updated_at ? Verta::instance($this->updated_at)->format('Y-m-d H:i:s') : null;
+    }
+
+    public function getMobileVerifiedAtVertaAttribute () : ?string {
+        return $this->mobile_verified_at ? Verta::instance($this->mobile_verified_at)->format('Y-m-d H:i:s') : null;
+    }
 }

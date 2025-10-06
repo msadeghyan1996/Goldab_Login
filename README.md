@@ -26,8 +26,8 @@ This project includes a Dockerized environment to simplify setup and ensure cons
    > phpMyAdmin credentials:
    > - Host: `db`
        >
-   - Username: `root`
-   >   - Password: `root`
+    - Username: `root`
+   > - Password: `root`
 5. Install dependencies and set up Laravel:
    ```bash
    docker exec -it javadApp bash
@@ -43,18 +43,21 @@ This project includes a Dockerized environment to simplify setup and ensure cons
 - Users table with name, last_name, mobile, password, status, etc.
 - OTP model and table for login verification
 - Mobile normalization and validation
-- Login API with OTP generation and registration flow
-- Standardized JSON response (success, statusType, message, errors, data, notify)
-- Feature tests with PHPUnit
-- OTPFactory for testing OTPs
-- OtpVerifyTest feature tests
-- OTP verification API with 4-digit codes
-- Mobile verification flow
-- Redirect to registration page if user info incomplete
-- OTP expires in 3 minutes
+- Login API with OTP generation and verification flow
+- UpdateInfo API to update user profile (name, last_name, password, national_id)
+- Standardized JSON responses (success, statusType, message, errors, data, notify)
+- Feature tests with PHPUnit:
+    - LoginTest
+    - OtpVerifyTest
+    - UpdateInfoTest
+- Unit tests for Iranian national code validation (NationalCodeTest)
+- Unit tests for Iranian mobile (MobileTest)
 
 ### 📝 Notes
 
 - `.env` file must exist before starting containers
 - OTP codes expire in 3 minutes
-- Tests require a fresh database
+- National codes are validated for Iranian format
+- Passwords are hashed securely using Laravel Hash::make
+- Tests require a fresh database sqlite
+- Rate limiting is applied to login, OTP verification, and update info endpoints

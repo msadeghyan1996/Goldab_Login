@@ -12,6 +12,7 @@ class OTP extends Model {
     use HasFactory;
 
     protected $table        = 'otps';
+    protected $primaryKey   = 'user_id';
     public    $incrementing = false;
 
 

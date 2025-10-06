@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\OTP\Type;
+use App\Enums\User\Status;
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Models\OTP;
 use App\Models\User;
+use app\Supports\Sanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -233,6 +236,87 @@ class AuthController extends Controller {
             ],
         ]);
 
+
+    }
+
+    public function updateInfo (Request $request) : \Illuminate\Http\JsonResponse {
+
+
+        $validator = Sanitizer::make($request->all(), [
+            'name'        => 'string|html:5|trim',
+            'password'    => 'string|alphanumeric|trim',
+            'last_name'   => 'string|alphanumeric|trim',
+            'national_id' => 'string|numeric|trim',
+        ])->sanitizeAndValidate([
+            'mobile'      => 'required|max:15',
+            'name'        => 'required|string|max:255',
+            'password'    => 'required|string|max:255',
+            'last_name'   => 'required|string|max:255',
+            'national_id' => 'required|string|size:10',
+        ]);
+
+        if ( $validator->fails() ) {
+            return self::validationResponse($validator);
+        }
+
+        $data       = $validator->validated();
+        $mobile     = $data['mobile'];
+        $name       = $data['name'];
+        $lastName   = $data['last_name'];
+        $password   = $data['password'];
+        $nationalId = $data['national_id'];
+        $mobile     = Helper::normalizeMobile($mobile);
+
+        if ( !$mobile ) {
+            return self::warning([
+                'message' => 'فیلدها را به صورت صحیح وارد فرمایید',
+                'errors'  => [
+                    'mobile' => 'شماره همراه معتبر نیست'
+                ]
+            ], 422);
+        }
+        $isValidNationalId = Helper::validateNationalCode($nationalId);
+        if ( !$isValidNationalId ) {
+            return self::warning([
+                'message' => 'فیلدها را به صورت صحیح وارد فرمایید',
+                'errors'  => [
+                    'national_id' => 'شماره کد ملی معتبر نیست'
+                ]
+            ], 422);
+        }
+
+        $user = User::where('mobile', $mobile)->first();
+        if ( !$user ) {
+            return self::warning('شماره تلفن صحیح نمی باشد', 404);
+        }
+        try {
+
+            $user->update([
+                'name'        => $name,
+                'national_id' => $nationalId,
+                'status'      => Status::ACTIVE,
+                'last_name'   => $lastName,
+                'password'    => Hash::make($password),
+            ]);
+
+            return self::success([
+                'message' => 'اطلاعات با موفقیت ثبت شد',
+                'data'    => [
+                    'page'  => 'home',
+                    'token' => $user->createToken('auth_token')->plainTextToken,
+                ]
+            ]);
+
+        } catch ( \Exception $e ) {
+            Log::channel('test')->info('Register user get failed', [
+                'message' => $e->getMessage(),
+                'line'    => $e->getLine(),
+                'mobile'  => $mobile
+            ]);
+
+            return self::error('مشکلی در ثبت اطلاعات به وجود آمد لطفا دوباره تلاش فرمایید');
+
+        }
 
     }
 

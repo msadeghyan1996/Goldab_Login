@@ -1,6 +1,9 @@
 <?php
 
 namespace App\Helpers;
+
+use InvalidArgumentException;
+
 class Helper {
 
 
@@ -77,4 +80,79 @@ class Helper {
 
         return (string) random_int($min, $max);
     }
+
+    /**
+     * Validate National Code
+     *
+     * @param string $code
+     *
+     * @return bool
+     */
+    public static function validateNationalCode (string $code = '') : bool {
+        if ( !preg_match('/^\d{10}$/', $code) ) {
+            return false;
+        }
+
+        for ( $i = 0; $i < 10; $i++ ) {
+            if ( preg_match('/^' . $i . '{10}$/', $code) ) {
+                return false;
+            }
+        }
+
+        for ( $i = 0, $sum = 0; $i < 9; $i++ ) {
+            $sum += ((10 - $i) * (int) $code[$i]);
+        }
+
+        $ret    = $sum % 11;
+        $parity = (int) $code[9];
+
+        return ($ret < 2 && $ret === $parity) || ($ret >= 2 && $ret === 11 - $parity);
+    }
+
+    /**
+     * Generate a valid Iranian national code
+     *
+     * @param string|null $nine 9-digit prefix (digits only). If null, random 9 digits produced.
+     *
+     * @return string 10-digit valid national code
+     * @throws InvalidArgumentException
+     */
+    public static function generate (?string $nine = null) : string {
+        // produce 9-digit base if not provided
+        if ( $nine === null ) {
+            // generate random 9 digits, avoid all-same sequences
+            do {
+                $nine = '';
+                for ( $i = 0; $i < 9; $i++ ) {
+                    $nine .= random_int(0, 9);
+                }
+            } while ( preg_match('/^([0-9])\1{8}$/', $nine) ); // reject all-same
+        } else {
+            // normalize input: keep digits only
+            $nine = preg_replace('/\D+/', '', $nine);
+            if ( strlen($nine) > 9 ) {
+                throw new InvalidArgumentException('Parameter $nine must be at most 9 digits.');
+            }
+            // left-pad with zeros if shorter than 9
+            $nine = str_pad($nine, 9, '0', STR_PAD_LEFT);
+            if ( preg_match('/^([0-9])\1{8}$/', $nine) ) {
+                // if all digits same, refuse — generate random instead
+                $nine = null;
+
+                return self::generate(null);
+            }
+        }
+
+        // compute checksum digit
+        $sum = 0;
+        for ( $i = 0; $i < 9; $i++ ) {
+            $sum += ((10 - $i) * (int) $nine[$i]);
+        }
+
+        $r     = $sum % 11;
+        $check = ($r < 2) ? $r : (11 - $r);
+
+        return $nine . $check;
+    }
+
 }
