@@ -158,36 +158,3 @@
         </button>
     </div>
 </div>
-<script>
-    // Timer Alpine.js Component
-    function timerComponent() {
-        return {
-            countdown: 60,
-            timerInterval: null,
-
-            init() {
-                this.startTimer();
-            },
-
-            startTimer() {
-                this.timerInterval = setInterval(() => {
-                    this.countdown--;
-
-                    if (this.countdown <= 0) {
-                        clearInterval(this.timerInterval);
-                        @this.
-                        set('canResend', true);
-                    }
-                }, 1000);
-            },
-
-            resetTimer() {
-                this.countdown = 60;
-                clearInterval(this.timerInterval);
-                this.startTimer();
-                @this.
-                set('canResend', false);
-            }
-        }
-    }
-</script>

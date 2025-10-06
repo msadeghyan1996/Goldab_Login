@@ -11,6 +11,8 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
     use UserMethods, UserRelations;
 
+    protected static string $factory = \Database\Factories\User\UserFactory::class;
+
     /**
      * The attributes that are mass assignable.
      *

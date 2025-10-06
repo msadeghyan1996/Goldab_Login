@@ -8,13 +8,14 @@ class UserRegisterService
 {
     private User $user;
 
-    public function __construct(private string $phoneNumber)
+    public function __construct(private readonly string $phoneNumber)
     {
     }
 
     public function handle(): self
     {
         $this->findOrCreateUser();
+        cache()?->forget(User::getOtpCodeCacheKeyByPhoneNumber($this->phoneNumber));
         return $this;
     }
 

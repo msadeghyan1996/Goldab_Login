@@ -3,7 +3,9 @@
 namespace App\Services\User;
 
 use App\Models\User\User;
+use Illuminate\Queue\MaxAttemptsExceededException;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthService
 {
@@ -27,8 +29,13 @@ class AuthService
 
     public function loginWithPassword(string $phoneNumber, string $password): ?User
     {
+        $cacheKey = "login_with_password:$phoneNumber";
+        if (RateLimiter::tooManyAttempts($cacheKey, 10)) {
+            throw new MaxAttemptsExceededException();
+        }
         $user = User::query()->where('phone_number', $phoneNumber)->first();
         if (!$user) {
+            RateLimiter::increment($cacheKey);
             return null;
         }
         return Hash::check($password, $user->password) ? $user : null;

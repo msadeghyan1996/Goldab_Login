@@ -5,16 +5,17 @@ namespace App\Livewire\Auth;
 use App\Services\User\AuthService;
 use App\Services\User\OtpSendService;
 use App\Services\User\UserRegisterService;
+use Illuminate\Queue\MaxAttemptsExceededException;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Title('Login to Goldab')]
 class AuthPage extends Component
 {
+    protected AuthService $authService;
     public $currentStep; // 'login' or 'otp' or 'password' or 'completion'
     public $phoneNumber = '';
     public $isLoading = false;
-    public $canResend = false;
     public array $digits = ['', '', '', '', '', ''];
     public int $timerCountDown = 60;
 
@@ -23,6 +24,11 @@ class AuthPage extends Component
     public string $password = '';
     public string $password_confirmation = '';
     public string $passwordToLogin = '';
+
+    public function __construct()
+    {
+        $this->authService = app(AuthService::class);
+    }
 
     public function mount(): void
     {
@@ -47,7 +53,7 @@ class AuthPage extends Component
     {
         $this->validateOnly('phoneNumber');
         $this->isLoading = true;
-        $theUser = $this->getAuthService()->findUserByPhone($this->phoneNumber);
+        $theUser = $this->authService->findUserByPhone($this->phoneNumber);
         if (!$theUser || !$theUser->isProfileCompleted()) {
             $this->currentStep = 'otp';
             $this->sendOtp();
@@ -61,8 +67,9 @@ class AuthPage extends Component
     public function verifyOtp(): void
     {
         $this->validateOnly('digits');
+        $this->validateOnly('digits.*');
         $this->isLoading = true;
-        $isValid = $this->getAuthService()->verifyOTP($this->phoneNumber, implode('', $this->digits));
+        $isValid = $this->authService->verifyOTP($this->phoneNumber, implode('', $this->digits));
         if ($isValid) {
             session()?->flash('success', 'OTP verified successfully! Now please enter your data.');
             $registerService = new UserRegisterService($this->phoneNumber);
@@ -87,9 +94,9 @@ class AuthPage extends Component
         $this->validateOnly('name');
         $this->validateOnly('national_id');
         $this->validateOnly('password');
-        $this->getAuthService()->completeFields(auth()->user(), [
-            'name' => $this->name,
-            'national_id' => $this->national_id,
+        $this->authService->completeFields(auth()->user(), [
+            'name' => trim(strip_tags($this->name)),
+            'national_id' => trim($this->national_id),
             'password' => $this->password,
         ]);
         $this->redirectToPanel();
@@ -98,7 +105,12 @@ class AuthPage extends Component
     public function loginWithPassword(): void
     {
         $this->validateOnly('passwordToLogin');
-        $user = $this->getAuthService()->loginWithPassword($this->phoneNumber, $this->passwordToLogin);
+        try {
+            $user = $this->authService->loginWithPassword($this->phoneNumber, $this->passwordToLogin);
+        } catch (MaxAttemptsExceededException) {
+            session()?->flash('error', 'You have exceeded the maximum number of attempts. Please wait one minute to reset your attempts.');
+            return;
+        }
         if ($user) {
             auth()->login($user);
             $this->redirectToPanel();
@@ -123,14 +135,14 @@ class AuthPage extends Component
         return view('livewire.auth.auth-page');
     }
 
-    protected function getAuthService(): AuthService
-    {
-        return new AuthService;
-    }
-
     protected function startTimer(): void
     {
         $this->dispatch('startTimer');
+    }
+
+    public function updatedPhoneNumber(): void
+    {
+        $this->phoneNumber = preg_replace('/[^0-9]/', '', $this->phoneNumber);
     }
 
     protected function sendOtp(): void
@@ -159,13 +171,13 @@ class AuthPage extends Component
     protected function rules(): array
     {
         return [
-            'phoneNumber' => 'required|regex:/^09\d{9}$/',
+            'phoneNumber' => 'required|regex:/^09\d{9}$/|max:11',
             'digits' => 'required|array|min:6|max:6',
-            'digits.*' => 'required|integer',
-            'name' => 'required|string',
+            'digits.*' => 'required|integer|min:0|max:9',
+            'name' => 'required|string|max:255',
             'national_id' => 'required|numeric|digits:10',
-            'password' => 'required|min:6|confirmed:password_confirmation',
-            'passwordToLogin' => 'required|min:6',
+            'password' => 'required|min:6|max:255|confirmed',
+            'passwordToLogin' => 'required|min:6|max:255',
         ];
     }
 
@@ -180,12 +192,15 @@ class AuthPage extends Component
             'digits.*.integer' => 'Please enter a valid verification code.',
             'name.required' => 'Please enter your name.',
             'name.string' => 'Please enter a valid name.',
+            'name.max' => 'Name is too long.',
             'national_id.required' => 'Please enter your national id.',
             'national_id.numeric' => 'Please enter a valid national id.',
             'national_id.digits' => 'Please enter a valid national id.',
             'password.required' => 'Please enter your password.',
             'password.min' => 'Your password must be at least 6 characters long.',
             'password.confirmed' => 'Your passwords does not match.',
+            'passwordToLogin.required' => 'Please enter your password.',
+            'passwordToLogin.min' => 'Your password must be at least 6 characters long.',
         ];
     }
 }
