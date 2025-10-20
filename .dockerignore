@@ -1,0 +1,17 @@
+vendor
+node_modules
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+storage/logs
+.git
+.idea
+.vscode
+docker-compose.yml
+.env
+.env.*
+tests
+*.md
+phpunit.xml
+
+
